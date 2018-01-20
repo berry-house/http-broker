@@ -1,0 +1,56 @@
+swagger: "2.0"
+
+info:
+  version: 1.0.0
+  title: HTTP Broker
+  description: HTTP broker for sensor platform data
+
+schemes:
+  - http
+basePath: /broker
+
+paths:
+  /temperature:
+    post:
+      summary: Temperature data insertion
+      description: Receives temperature data and stores it in the database.
+      produces:
+        - text
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/TemperatureData'
+      responses:
+        200:
+          description: Success in storing data
+        400:
+          description: Bad request
+        404:
+          description: Non-existent ID
+        500:
+          description: Internal server error
+
+definitions:
+  TemperatureData:
+    required:
+      - id
+      - timestamp
+      - temperature
+    properties:
+      id:
+        type: integer
+        format: uint32
+      timestamp:
+        type: integer
+        format: int64
+      temperature:
+        type: number
+        format: float
+    example:
+      id: 1
+      timestamp: 1516480932
+      temperature: 21.4
