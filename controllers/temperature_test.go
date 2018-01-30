@@ -29,22 +29,21 @@ var _ services.Temperature = (*mockTemperatureService)(nil)
 
 func (s *mockTemperatureService) Write(temp *models.TemperatureData) error {
 	if temp == nil {
-		return services.TemperatureNilDataError
+		return services.TemperatureInvalidDataError("nil data")
 	}
 	if temp.Temperature < -30 || temp.Temperature > 50 {
-		return services.TemperatureInvalidTemperatureError
+		return services.TemperatureInvalidTemperature
 	}
-
 	// Mocked valid IDs
-	if temp.ID < 1 || temp.ID > 5 {
-		return services.TemperatureInvalidIDError
+	if temp.ID > 0 && temp.ID < 5 {
+		return nil
 	}
 	// Mocked driver error
-	if temp.ID == 5 {
-		return services.TemperatureDatabaseDriverError
+	if temp.ID == 0 || temp.ID == 5 {
+		return services.TemperatureDatabaseDriverError("mocked error")
 	}
 
-	return nil
+	return services.TemperatureInvalidID
 }
 
 // Utilities
@@ -86,7 +85,7 @@ func TestWriteTemperature(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		"Non-existing ID": {
-			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":10,"timestamp":1516472722,"temperature":20}`)),
+			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":7,"timestamp":1516472722,"temperature":20}`)),
 			expectedStatus:     "Invalid ID.\n",
 			expectedStatusCode: http.StatusNotFound,
 		},

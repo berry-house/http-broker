@@ -5,25 +5,21 @@ import (
 	"github.com/berry-house/http-broker/models"
 )
 
-// TemperatureError is a type for service errors
-type TemperatureError string
+// TemperatureInvalidDataError is an error type for invalid data errors
+type TemperatureInvalidDataError string
 
-func (e TemperatureError) Error() string { return string(e) }
+// TemperatureDatabaseDriverError is an error type for database driver errors
+type TemperatureDatabaseDriverError string
 
-var _ error = TemperatureError("")
+func (e TemperatureInvalidDataError) Error() string    { return string(e) }
+func (e TemperatureDatabaseDriverError) Error() string { return string(e) }
 
 const (
-	// TemperatureNilDataError is the default error for nil temperature data
-	TemperatureNilDataError = TemperatureError("nil temperature data")
-	// TemperatureInvalidIDError is the default error for invalid ID
-	TemperatureInvalidIDError = TemperatureError("invalid ID")
-	// TemperatureInvalidTemperatureError is the default error for too high or too low temperatures
-	TemperatureInvalidTemperatureError = TemperatureError("invalid temperature")
-	// TemperatureDatabaseDriverError is the default error for unidentified errors drivers
-	TemperatureDatabaseDriverError = TemperatureError("database driver error")
+	// TemperatureInvalidTemperature is the default error for invalid temperatures
+	TemperatureInvalidTemperature = TemperatureInvalidDataError("invalid temperature")
+	// TemperatureInvalidID is the default error for non-existent IDs
+	TemperatureInvalidID = TemperatureInvalidDataError("invalid ID")
 )
-
-var _ Temperature = (*TemperatureDatabase)(nil)
 
 // TemperatureDatabase is a service for writing temperature data to database
 type TemperatureDatabase struct {
@@ -32,20 +28,19 @@ type TemperatureDatabase struct {
 
 // Write writes temperature data to the database
 func (s *TemperatureDatabase) Write(temp *models.TemperatureData) error {
-	// Validating data
 	if temp == nil {
-		return TemperatureNilDataError
+		return TemperatureInvalidDataError("nil data")
 	}
 	if temp.Temperature < -30 || temp.Temperature > 50 {
-		return TemperatureInvalidTemperatureError
+		return TemperatureInvalidTemperature
 	}
 
-	switch err := s.Driver.WriteTemperature(temp); err {
+	switch err := s.Driver.WriteTemperature(temp); err.(type) {
 	case nil:
 		return nil
-	case drivers.DatabaseInvalidIDError:
-		return TemperatureInvalidIDError
+	case drivers.DatabaseInvalidDataError:
+		return TemperatureInvalidID
 	default:
-		return TemperatureDatabaseDriverError
+		return TemperatureDatabaseDriverError(err.Error())
 	}
 }

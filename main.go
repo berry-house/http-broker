@@ -4,30 +4,28 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/berry-house/http-broker/controllers"
 	"github.com/berry-house/http-broker/drivers"
 	"github.com/berry-house/http-broker/models"
-
 	"github.com/berry-house/http-broker/services"
 	"github.com/gorilla/mux"
-
-	"github.com/berry-house/http-broker/controllers"
 )
 
 func main() {
 	// Drivers
-	databaseDriver := drivers.DatabaseMemory{
-		Data: map[uint][]*models.TemperatureData{
+	databaseDriver, _ := drivers.NewDatabaseMemory(
+		map[uint][]*models.TemperatureData{
 			1: []*models.TemperatureData{},
 			2: []*models.TemperatureData{},
 			3: []*models.TemperatureData{},
 			4: []*models.TemperatureData{},
 			5: []*models.TemperatureData{},
 		},
-	}
+	)
 
 	// Services
 	temperatureService := services.TemperatureDatabase{
-		Driver: &databaseDriver,
+		Driver: databaseDriver,
 	}
 
 	// Controllers
