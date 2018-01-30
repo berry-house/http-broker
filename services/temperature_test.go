@@ -10,15 +10,29 @@ import (
 	"github.com/berry-house/http-broker/services"
 )
 
-func TestDatabaseError(t *testing.T) {
+func TestTemperatureInvalidDataError(t *testing.T) {
 	tests := map[string]struct {
-		err      services.TemperatureError // error
-		expected string                    // expected message
+		err      services.TemperatureInvalidDataError // error
+		expected string                               // expected message
 	}{
-		"nil temperature data":      {services.TemperatureNilDataError, "nil temperature data"},
-		"Invalid ID error":          {services.TemperatureInvalidIDError, "invalid ID"},
-		"Invalid temperature error": {services.TemperatureInvalidTemperatureError, "invalid temperature"},
-		"Database driver error":     {services.TemperatureDatabaseDriverError, "database driver error"},
+		"General test": {services.TemperatureInvalidDataError("error message"), "error message"},
+	}
+	for testName, testCase := range tests {
+		t.Run(testName, func(t *testing.T) {
+			errorMsg := testCase.err.Error()
+			if errorMsg != testCase.expected {
+				t.Errorf("Expected %s, got %s", testCase.expected, errorMsg)
+			}
+		})
+	}
+}
+
+func TestTemperatureDatabaseDriverError(t *testing.T) {
+	tests := map[string]struct {
+		err      services.TemperatureDatabaseDriverError // error
+		expected string                                  // expected message
+	}{
+		"General test": {services.TemperatureDatabaseDriverError("error message"), "error message"},
 	}
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {
@@ -32,22 +46,31 @@ func TestDatabaseError(t *testing.T) {
 
 type mockDatabaseDriver struct{}
 
-var _ drivers.Database = (*mockDatabaseDriver)(nil)
+func (d *mockDatabaseDriver) Exists(id uint) (bool, error) {
+	if id > 0 && id < 5 {
+		return true, nil
+	}
+	if id == 5 {
+		return false, drivers.DatabaseUnexpectedError("mocked error")
+	}
+
+	return false, nil
+}
 
 func (d *mockDatabaseDriver) WriteTemperature(temp *models.TemperatureData) error {
 	if temp == nil {
-		return services.TemperatureNilDataError
+		return drivers.DatabaseInvalidDataError("nil data")
 	}
 	// Mocked valid IDs
-	if temp.ID < 1 || temp.ID > 5 {
-		return drivers.DatabaseInvalidIDError
+	if temp.ID > 0 && temp.ID < 5 {
+		return nil
 	}
 	// Mocked driver error
-	if temp.ID == 5 {
-		return drivers.DatabaseUnexpectedError
+	if temp.ID == 0 || temp.ID == 5 {
+		return drivers.DatabaseUnexpectedError("mocked error")
 	}
 
-	return nil
+	return drivers.DatabaseInvalidDataError("invalid id")
 }
 
 func TestTemperatureWrite(t *testing.T) {
@@ -61,11 +84,11 @@ func TestTemperatureWrite(t *testing.T) {
 		expected error                   // expected error
 	}{
 		"Happy path":           {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: 23.5}, nil},
-		"nil data":             {nil, services.TemperatureNilDataError},
-		"Invalid ID":           {&models.TemperatureData{ID: 6, Timestamp: 1516478286, Temperature: 20}, services.TemperatureInvalidIDError},
-		"Temperature too low":  {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: -50.3}, services.TemperatureInvalidTemperatureError},
-		"Temperature too high": {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: 56.3}, services.TemperatureInvalidTemperatureError},
-		"Database error":       {&models.TemperatureData{ID: 5, Timestamp: 1516478286, Temperature: 20}, services.TemperatureDatabaseDriverError},
+		"nil data":             {nil, services.TemperatureInvalidDataError("nil data")},
+		"Invalid ID":           {&models.TemperatureData{ID: 6, Timestamp: 1516478286, Temperature: 20}, services.TemperatureInvalidID},
+		"Temperature too low":  {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: -50.3}, services.TemperatureInvalidTemperature},
+		"Temperature too high": {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: 56.3}, services.TemperatureInvalidTemperature},
+		"Database error":       {&models.TemperatureData{ID: 5, Timestamp: 1516478286, Temperature: 20}, services.TemperatureDatabaseDriverError("mocked error")},
 	}
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {

@@ -37,10 +37,9 @@ func (c *Temperature) Write(w http.ResponseWriter, r *http.Request) {
 	switch err = c.Service.Write(&temp); err {
 	case nil:
 		w.Write([]byte("OK.\n"))
-		return
-	case services.TemperatureInvalidIDError:
+	case services.TemperatureInvalidID:
 		http.Error(w, "Invalid ID.", http.StatusNotFound)
-	case services.TemperatureInvalidTemperatureError:
+	case services.TemperatureInvalidTemperature:
 		http.Error(w, "Invalid temperature.", http.StatusBadRequest)
 	default:
 		// TODO: log error
