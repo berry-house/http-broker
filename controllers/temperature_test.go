@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/berry-house/http-broker/controllers"
-	"github.com/berry-house/http-broker/models"
-	"github.com/berry-house/http-broker/services"
+	"github.com/berry-house/http_broker/controllers"
+	"github.com/berry-house/http_broker/models"
+	"github.com/berry-house/http_broker/services"
 )
 
 // Handler mock

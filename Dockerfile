@@ -4,7 +4,7 @@ FROM debian:9.3
 RUN apt update && \
     apt install -y curl
 
-COPY http-broker /root/http-broker
+COPY http_broker /root/http_broker
 
 # Service
-CMD /root/http-broker
+CMD /root/http_broker

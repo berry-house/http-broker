@@ -9,8 +9,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/berry-house/http-broker/models"
-	"github.com/berry-house/http-broker/services"
+	"github.com/berry-house/http_broker/models"
+	"github.com/berry-house/http_broker/services"
+	"github.com/berry-house/http_broker/util"
 )
 
 // Temperature is the controller for temperature data
@@ -22,6 +23,7 @@ func (c *Temperature) Write(w http.ResponseWriter, r *http.Request) {
 	// Body extraction
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		util.LogError(r, err)
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 
 		return
@@ -42,7 +44,7 @@ func (c *Temperature) Write(w http.ResponseWriter, r *http.Request) {
 	case services.TemperatureInvalidTemperature:
 		http.Error(w, "Invalid temperature.", http.StatusBadRequest)
 	default:
-		// TODO: log error
+		util.LogError(r, err)
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
 	}
 }

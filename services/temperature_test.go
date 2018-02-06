@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/berry-house/http-broker/drivers"
+	"github.com/berry-house/http_broker/drivers"
 
-	"github.com/berry-house/http-broker/models"
-	"github.com/berry-house/http-broker/services"
+	"github.com/berry-house/http_broker/models"
+	"github.com/berry-house/http_broker/services"
 )
 
 func TestTemperatureInvalidDataError(t *testing.T) {
