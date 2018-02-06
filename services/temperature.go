@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/berry-house/http-broker/drivers"
-	"github.com/berry-house/http-broker/models"
+	"github.com/berry-house/http_broker/drivers"
+	"github.com/berry-house/http_broker/models"
 )
 
 // TemperatureInvalidDataError is an error type for invalid data errors

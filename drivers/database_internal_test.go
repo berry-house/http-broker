@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/berry-house/http-broker/models"
+	"github.com/berry-house/http_broker/models"
 )
 
 func TestNewDatabaseMemory(t *testing.T) {
