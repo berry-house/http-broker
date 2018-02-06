@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,26 +17,70 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	port             int
+	runningMode      string
+	databaseAddress  string
+	databaseName     string
+	databaseUsername string
+	databasePassword string
+)
+
+func init() {
+	flag.IntVar(&port, "port", 8000, "Port in which the service listens")
+	flag.StringVar(&runningMode, "runningMode", "", "Running mode of the server (either \"prod\" or \"test\")")
+	flag.StringVar(&databaseAddress, "databaseAddress", "", "Address for the database")
+	flag.StringVar(&databaseName, "databaseName", "", "Name of the database")
+	flag.StringVar(&databaseUsername, "databaseUsername", "", "Username for the database")
+	flag.StringVar(&databasePassword, "databasePassword", "", "Password for the database")
+}
+
 func main() {
-	// Drivers
-	databaseDriver, _ := drivers.NewDatabaseMemory(
-		map[uint][]*models.TemperatureData{
-			1: []*models.TemperatureData{},
-			2: []*models.TemperatureData{},
-			3: []*models.TemperatureData{},
-			4: []*models.TemperatureData{},
-			5: []*models.TemperatureData{},
-		},
-	)
+	flag.Parse()
 
-	// Services
-	temperatureService := services.TemperatureDatabase{
-		Driver: databaseDriver,
-	}
+	var temperatureController controllers.Temperature
 
-	// Controllers
-	temperatureController := controllers.Temperature{
-		Service: &temperatureService,
+	switch runningMode {
+	case "prod":
+		// Drivers
+		databaseDriver, err := drivers.NewDatabaseMySQL(
+			fmt.Sprintf("%s:%s@tcp(%s)/%s", databaseUsername, databasePassword, databaseAddress, databaseName),
+		)
+		if err != nil {
+			panic(err.Error())
+		}
+		// Services
+		temperatureService := services.TemperatureDatabase{
+			Driver: databaseDriver,
+		}
+
+		// Controllers
+		temperatureController = controllers.Temperature{
+			Service: &temperatureService,
+		}
+	case "test":
+		// Drivers
+		databaseDriver, _ := drivers.NewDatabaseMemory(
+			map[uint][]*models.TemperatureData{
+				1: []*models.TemperatureData{},
+				2: []*models.TemperatureData{},
+				3: []*models.TemperatureData{},
+				4: []*models.TemperatureData{},
+				5: []*models.TemperatureData{},
+			},
+		)
+
+		// Services
+		temperatureService := services.TemperatureDatabase{
+			Driver: databaseDriver,
+		}
+
+		// Controllers
+		temperatureController = controllers.Temperature{
+			Service: &temperatureService,
+		}
+	default:
+		panic("Invalid running mode. Use http_broker -h.")
 	}
 
 	// Logging
