@@ -4,7 +4,7 @@
 // Error returning should be related only to data logical errors.
 package services
 
-import "github.com/berry-house/http-broker/models"
+import "github.com/berry-house/http_broker/models"
 
 // Temperature is an inteface for temperature services
 type Temperature interface {

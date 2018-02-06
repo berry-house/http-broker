@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/berry-house/http-broker/models"
+	"github.com/berry-house/http_broker/models"
 	_ "github.com/go-sql-driver/mysql" // MySQL
 )
 
