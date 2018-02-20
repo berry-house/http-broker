@@ -20,6 +20,7 @@ import (
 var (
 	port             int
 	runningMode      string
+	loggerConfigFile string
 	databaseAddress  string
 	databaseName     string
 	databaseUsername string
@@ -29,6 +30,7 @@ var (
 func init() {
 	flag.IntVar(&port, "port", 8000, "Port in which the service listens")
 	flag.StringVar(&runningMode, "runningMode", "", "Running mode of the server (either \"prod\" or \"test\")")
+	flag.StringVar(&loggerConfigFile, "loggerConfigFile", "", "Path of JSON file for logging configuration.")
 	flag.StringVar(&databaseAddress, "databaseAddress", "", "Address for the database")
 	flag.StringVar(&databaseName, "databaseName", "", "Name of the database")
 	flag.StringVar(&databaseUsername, "databaseUsername", "", "Username for the database")
@@ -84,7 +86,7 @@ func main() {
 	}
 
 	// Logging
-	loggerJSON, err := ioutil.ReadFile("conf/logger.json")
+	loggerJSON, err := ioutil.ReadFile(loggerConfigFile)
 	if err != nil {
 		panic(err)
 	}
