@@ -13,26 +13,26 @@ import (
 )
 
 // Handler mock
-type mockHandlerTemperature struct {
-	c controllers.Temperature
+type mockHandlerStatus struct {
+	c controllers.Status
 }
 
-func (h *mockHandlerTemperature) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *mockHandlerStatus) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Routing and methods should be handled by the server, not by the controller
 	h.c.Write(w, r)
 }
 
 // Service mock
-type mockTemperatureService struct{}
+type mockStatusService struct{}
 
-var _ services.Temperature = (*mockTemperatureService)(nil)
+var _ services.Status = (*mockStatusService)(nil)
 
-func (s *mockTemperatureService) Write(temp *models.TemperatureData) error {
+func (s *mockStatusService) Write(temp *models.StatusData) error {
 	if temp == nil {
-		return services.TemperatureInvalidDataError("nil data")
+		return services.StatusInvalidDataError("nil data")
 	}
-	if temp.Temperature < -30 || temp.Temperature > 50 {
-		return services.TemperatureInvalidTemperature
+	if temp.Status < -30 || temp.Status > 50 {
+		return services.StatusInvalidStatus
 	}
 	// Mocked valid IDs
 	if temp.ID > 0 && temp.ID < 5 {
@@ -40,14 +40,14 @@ func (s *mockTemperatureService) Write(temp *models.TemperatureData) error {
 	}
 	// Mocked driver error
 	if temp.ID == 0 || temp.ID == 5 {
-		return services.TemperatureDatabaseDriverError("mocked error")
+		return services.StatusDatabaseDriverError("mocked error")
 	}
 
-	return services.TemperatureInvalidID
+	return services.StatusInvalidID
 }
 
 // Utilities
-func buildTemperatureRequest(method, path string, body []byte) *http.Request {
+func buildStatusRequest(method, path string, body []byte) *http.Request {
 	req, err := http.NewRequest(method, path, bytes.NewReader(body))
 	if err != nil {
 		panic(err.Error())
@@ -56,11 +56,11 @@ func buildTemperatureRequest(method, path string, body []byte) *http.Request {
 	return req
 }
 
-func TestWriteTemperature(t *testing.T) {
+func TestWriteStatus(t *testing.T) {
 	// Setup
-	handler := &mockHandlerTemperature{
-		c: controllers.Temperature{
-			Service: &mockTemperatureService{},
+	handler := &mockHandlerStatus{
+		c: controllers.Status{
+			Service: &mockStatusService{},
 		},
 	}
 	server := httptest.NewServer(handler)
@@ -70,37 +70,37 @@ func TestWriteTemperature(t *testing.T) {
 		expectedStatusCode int           // expected status code
 	}{
 		"Happy path": {
-			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":1,"timestamp":1516472722,"temperature":20}`)),
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"timestamp":1516472722,"status":20}`)),
 			expectedStatus:     "OK.\n",
 			expectedStatusCode: http.StatusOK,
 		},
 		"No body": {
-			request:            buildTemperatureRequest("POST", server.URL, nil),
+			request:            buildStatusRequest("POST", server.URL, nil),
 			expectedStatus:     "Invalid body.\n",
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		"Invalid ID": {
-			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":-1,"timestamp":1516472722,"temperature":20}`)),
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":-1,"timestamp":1516472722,"status":20}`)),
 			expectedStatus:     "Invalid body.\n",
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		"Non-existing ID": {
-			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":7,"timestamp":1516472722,"temperature":20}`)),
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":7,"timestamp":1516472722,"status":20}`)),
 			expectedStatus:     "Invalid ID.\n",
 			expectedStatusCode: http.StatusNotFound,
 		},
-		"Temperature too high": {
-			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":1,"temperature":163.4}`)),
-			expectedStatus:     "Invalid temperature.\n",
+		"Status too high": {
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"status":163.4}`)),
+			expectedStatus:     "Invalid status.\n",
 			expectedStatusCode: http.StatusBadRequest,
 		},
-		"Temperature too low": {
-			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":1,"temperature":-80.4}`)),
-			expectedStatus:     "Invalid temperature.\n",
+		"Status too low": {
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"status":-80.4}`)),
+			expectedStatus:     "Invalid status.\n",
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		"Database error": {
-			request:            buildTemperatureRequest("POST", server.URL, []byte(`{"id":5,"timestamp":1516472722,"temperature":20}`)),
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":5,"timestamp":1516472722,"status":20}`)),
 			expectedStatus:     "Internal server error.\n",
 			expectedStatusCode: http.StatusInternalServerError,
 		},

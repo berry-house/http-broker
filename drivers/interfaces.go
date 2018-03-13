@@ -9,5 +9,5 @@ import "github.com/berry-house/http_broker/models"
 // Database is an interface for database drivers
 type Database interface {
 	Exists(id uint) (bool, error)
-	WriteTemperature(t *models.TemperatureData) error
+	WriteStatus(t *models.StatusData) error
 }

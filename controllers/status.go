@@ -14,12 +14,12 @@ import (
 	"github.com/berry-house/http_broker/util"
 )
 
-// Temperature is the controller for temperature data
-type Temperature struct {
-	Service services.Temperature
+// Status is the controller for status data
+type Status struct {
+	Service services.Status
 }
 
-func (c *Temperature) Write(w http.ResponseWriter, r *http.Request) {
+func (c *Status) Write(w http.ResponseWriter, r *http.Request) {
 	// Body extraction
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -28,7 +28,7 @@ func (c *Temperature) Write(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	var temp models.TemperatureData
+	var temp models.StatusData
 	if err = json.Unmarshal(body, &temp); err != nil {
 		http.Error(w, "Invalid body.", http.StatusBadRequest)
 
@@ -39,10 +39,10 @@ func (c *Temperature) Write(w http.ResponseWriter, r *http.Request) {
 	switch err = c.Service.Write(&temp); err {
 	case nil:
 		w.Write([]byte("OK.\n"))
-	case services.TemperatureInvalidID:
+	case services.StatusInvalidID:
 		http.Error(w, "Invalid ID.", http.StatusNotFound)
-	case services.TemperatureInvalidTemperature:
-		http.Error(w, "Invalid temperature.", http.StatusBadRequest)
+	case services.StatusInvalidStatus:
+		http.Error(w, "Invalid status.", http.StatusBadRequest)
 	default:
 		util.LogError(r, err)
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)
