@@ -6,7 +6,7 @@ package services
 
 import "github.com/berry-house/http_broker/models"
 
-// Temperature is an inteface for temperature services
-type Temperature interface {
-	Write(temp *models.TemperatureData) error
+// Status is an inteface for status services
+type Status interface {
+	Write(temp *models.StatusData) error
 }

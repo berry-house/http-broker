@@ -40,7 +40,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	var temperatureController controllers.Temperature
+	var statusController controllers.Status
 
 	switch runningMode {
 	case "prod":
@@ -52,34 +52,34 @@ func main() {
 			panic(err.Error())
 		}
 		// Services
-		temperatureService := services.TemperatureDatabase{
+		statusService := services.StatusDatabase{
 			Driver: databaseDriver,
 		}
 
 		// Controllers
-		temperatureController = controllers.Temperature{
-			Service: &temperatureService,
+		statusController = controllers.Status{
+			Service: &statusService,
 		}
 	case "test":
 		// Drivers
 		databaseDriver, _ := drivers.NewDatabaseMemory(
-			map[uint][]*models.TemperatureData{
-				1: []*models.TemperatureData{},
-				2: []*models.TemperatureData{},
-				3: []*models.TemperatureData{},
-				4: []*models.TemperatureData{},
-				5: []*models.TemperatureData{},
+			map[uint][]*models.StatusData{
+				1: []*models.StatusData{},
+				2: []*models.StatusData{},
+				3: []*models.StatusData{},
+				4: []*models.StatusData{},
+				5: []*models.StatusData{},
 			},
 		)
 
 		// Services
-		temperatureService := services.TemperatureDatabase{
+		statusService := services.StatusDatabase{
 			Driver: databaseDriver,
 		}
 
 		// Controllers
-		temperatureController = controllers.Temperature{
-			Service: &temperatureService,
+		statusController = controllers.Status{
+			Service: &statusService,
 		}
 	default:
 		panic("Invalid running mode. Use http_broker -h.")
@@ -108,7 +108,7 @@ func main() {
 
 	// Router
 	router := mux.NewRouter()
-	router.HandleFunc("/broker/temperature", temperatureController.Write).Methods("POST")
+	router.HandleFunc("/broker/status", statusController.Write).Methods("POST")
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			rctx := r.WithContext(ctx)

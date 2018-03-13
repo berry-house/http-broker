@@ -20,11 +20,11 @@ func (e DatabaseUnexpectedError) Error() string  { return string(e) }
 
 // DatabaseMemory is an in-memory database driver
 type DatabaseMemory struct {
-	data map[uint][]*models.TemperatureData
+	data map[uint][]*models.StatusData
 }
 
 // NewDatabaseMemory creates a new DatabaseMemory driver
-func NewDatabaseMemory(data map[uint][]*models.TemperatureData) (Database, error) {
+func NewDatabaseMemory(data map[uint][]*models.StatusData) (Database, error) {
 	if data == nil {
 		return nil, DatabaseInvalidDataError("nil data")
 	}
@@ -42,8 +42,8 @@ func (d *DatabaseMemory) Exists(id uint) (bool, error) {
 	return true, nil
 }
 
-// WriteTemperature writes temperature data into memory
-func (d *DatabaseMemory) WriteTemperature(temp *models.TemperatureData) error {
+// WriteStatus writes status data into memory
+func (d *DatabaseMemory) WriteStatus(temp *models.StatusData) error {
 	if d == nil {
 		return DatabaseUnexpectedError("nil driver")
 	}
@@ -64,8 +64,8 @@ func (d *DatabaseMemory) WriteTemperature(temp *models.TemperatureData) error {
 }
 
 const (
-	plantQuery        = `SELECT COUNT(*) FROM plant WHERE id = ?;`
-	temperatureInsert = `REPLACE INTO conditions(plantID, time, airTemperature) VALUES(?, ?, ?);`
+	plantQuery   = `SELECT COUNT(*) FROM plant WHERE id = ?;`
+	statusInsert = `REPLACE INTO conditions(plantID, time, airStatus) VALUES(?, ?, ?);`
 )
 
 // DatabaseMySQL is a MySQL database driver
@@ -99,8 +99,8 @@ func (d *DatabaseMySQL) Exists(id uint) (bool, error) {
 	return rowsNumber != 0, nil
 }
 
-// WriteTemperature writes temperature data into memory
-func (d *DatabaseMySQL) WriteTemperature(temp *models.TemperatureData) error {
+// WriteStatus writes status data into memory
+func (d *DatabaseMySQL) WriteStatus(temp *models.StatusData) error {
 	if d == nil {
 		return DatabaseUnexpectedError("nil driver")
 	}
@@ -121,7 +121,7 @@ func (d *DatabaseMySQL) WriteTemperature(temp *models.TemperatureData) error {
 	timestamp := time.Unix(temp.Timestamp, 0)
 	timestampString := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
 		timestamp.Year(), int(timestamp.Month()), timestamp.Day(), timestamp.Hour(), timestamp.Minute(), timestamp.Second())
-	insert, err := d.database.Prepare(temperatureInsert)
+	insert, err := d.database.Prepare(statusInsert)
 	if err != nil {
 		return DatabaseUnexpectedError(err.Error())
 	}

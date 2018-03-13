@@ -10,12 +10,12 @@ import (
 	"github.com/berry-house/http_broker/services"
 )
 
-func TestTemperatureInvalidDataError(t *testing.T) {
+func TestStatusInvalidDataError(t *testing.T) {
 	tests := map[string]struct {
-		err      services.TemperatureInvalidDataError // error
-		expected string                               // expected message
+		err      services.StatusInvalidDataError // error
+		expected string                          // expected message
 	}{
-		"General test": {services.TemperatureInvalidDataError("error message"), "error message"},
+		"General test": {services.StatusInvalidDataError("error message"), "error message"},
 	}
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {
@@ -27,12 +27,12 @@ func TestTemperatureInvalidDataError(t *testing.T) {
 	}
 }
 
-func TestTemperatureDatabaseDriverError(t *testing.T) {
+func TestStatusDatabaseDriverError(t *testing.T) {
 	tests := map[string]struct {
-		err      services.TemperatureDatabaseDriverError // error
-		expected string                                  // expected message
+		err      services.StatusDatabaseDriverError // error
+		expected string                             // expected message
 	}{
-		"General test": {services.TemperatureDatabaseDriverError("error message"), "error message"},
+		"General test": {services.StatusDatabaseDriverError("error message"), "error message"},
 	}
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {
@@ -57,7 +57,7 @@ func (d *mockDatabaseDriver) Exists(id uint) (bool, error) {
 	return false, nil
 }
 
-func (d *mockDatabaseDriver) WriteTemperature(temp *models.TemperatureData) error {
+func (d *mockDatabaseDriver) WriteStatus(temp *models.StatusData) error {
 	if temp == nil {
 		return drivers.DatabaseInvalidDataError("nil data")
 	}
@@ -73,22 +73,22 @@ func (d *mockDatabaseDriver) WriteTemperature(temp *models.TemperatureData) erro
 	return drivers.DatabaseInvalidDataError("invalid id")
 }
 
-func TestTemperatureWrite(t *testing.T) {
+func TestStatusWrite(t *testing.T) {
 	// Setup
-	service := services.TemperatureDatabase{
+	service := services.StatusDatabase{
 		Driver: &mockDatabaseDriver{},
 	}
 
 	tests := map[string]struct {
-		temp     *models.TemperatureData // input
-		expected error                   // expected error
+		temp     *models.StatusData // input
+		expected error              // expected error
 	}{
-		"Happy path":           {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: 23.5}, nil},
-		"nil data":             {nil, services.TemperatureInvalidDataError("nil data")},
-		"Invalid ID":           {&models.TemperatureData{ID: 6, Timestamp: 1516478286, Temperature: 20}, services.TemperatureInvalidID},
-		"Temperature too low":  {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: -50.3}, services.TemperatureInvalidTemperature},
-		"Temperature too high": {&models.TemperatureData{ID: 1, Timestamp: 1516478286, Temperature: 56.3}, services.TemperatureInvalidTemperature},
-		"Database error":       {&models.TemperatureData{ID: 5, Timestamp: 1516478286, Temperature: 20}, services.TemperatureDatabaseDriverError("mocked error")},
+		"Happy path":      {&models.StatusData{ID: 1, Timestamp: 1516478286, Temperature: 23.5}, nil},
+		"nil data":        {nil, services.StatusInvalidDataError("nil data")},
+		"Invalid ID":      {&models.StatusData{ID: 6, Timestamp: 1516478286, Temperature: 20}, services.StatusInvalidID},
+		"Status too low":  {&models.StatusData{ID: 1, Timestamp: 1516478286, Temperature: -50.3}, services.StatusInvalidStatus},
+		"Status too high": {&models.StatusData{ID: 1, Timestamp: 1516478286, Temperature: 56.3}, services.StatusInvalidStatus},
+		"Database error":  {&models.StatusData{ID: 5, Timestamp: 1516478286, Temperature: 20}, services.StatusDatabaseDriverError("mocked error")},
 	}
 	for testName, testCase := range tests {
 		t.Run(testName, func(t *testing.T) {
