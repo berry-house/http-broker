@@ -41,8 +41,8 @@ func (c *Status) Write(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK.\n"))
 	case services.StatusInvalidID:
 		http.Error(w, "Invalid ID.", http.StatusNotFound)
-	case services.StatusInvalidStatus:
-		http.Error(w, "Invalid status.", http.StatusBadRequest)
+	case services.StatusInvalidData:
+		http.Error(w, "Invalid data.", http.StatusBadRequest)
 	default:
 		util.LogError(r, err)
 		http.Error(w, "Internal server error.", http.StatusInternalServerError)

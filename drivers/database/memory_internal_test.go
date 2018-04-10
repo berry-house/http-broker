@@ -1,4 +1,4 @@
-package drivers
+package database
 
 import (
 	"reflect"
@@ -7,27 +7,27 @@ import (
 	"github.com/berry-house/http_broker/models"
 )
 
-func TestNewDatabaseMemory(t *testing.T) {
+func TestNewMemory(t *testing.T) {
 	testsSuccessful := map[string]struct {
-		data     map[uint][]*models.TemperatureData // input
-		expected Database                           // expected driver
+		data     map[uint][]*models.StatusData // input
+		expected Database                      // expected driver
 	}{
 		"Happy path": {
-			data: map[uint][]*models.TemperatureData{
-				1: []*models.TemperatureData{},
+			data: map[uint][]*models.StatusData{
+				1: []*models.StatusData{},
 			},
-			expected: &DatabaseMemory{
-				data: map[uint][]*models.TemperatureData{
-					1: []*models.TemperatureData{},
+			expected: &Memory{
+				data: map[uint][]*models.StatusData{
+					1: []*models.StatusData{},
 				},
 			},
 		},
 		"nil list": {
-			data: map[uint][]*models.TemperatureData{
+			data: map[uint][]*models.StatusData{
 				1: nil,
 			},
-			expected: &DatabaseMemory{
-				data: map[uint][]*models.TemperatureData{
+			expected: &Memory{
+				data: map[uint][]*models.StatusData{
 					1: nil,
 				},
 			},
@@ -35,7 +35,7 @@ func TestNewDatabaseMemory(t *testing.T) {
 	}
 	for testName, testCase := range testsSuccessful {
 		t.Run(testName, func(t *testing.T) {
-			d, err := NewDatabaseMemory(testCase.data)
+			d, err := NewMemory(testCase.data)
 			if err != nil {
 				t.Errorf("No error expected, got %+v", err)
 			}
@@ -47,8 +47,8 @@ func TestNewDatabaseMemory(t *testing.T) {
 	}
 
 	testsFailure := map[string]struct {
-		data     map[uint][]*models.TemperatureData // input
-		expected error                              // expected error
+		data     map[uint][]*models.StatusData // input
+		expected error                         // expected error
 	}{
 		"nil data": {
 			data:     nil,
@@ -57,7 +57,7 @@ func TestNewDatabaseMemory(t *testing.T) {
 	}
 	for testName, testCase := range testsFailure {
 		t.Run(testName, func(t *testing.T) {
-			_, err := NewDatabaseMemory(testCase.data)
+			_, err := NewMemory(testCase.data)
 			if err == nil {
 				t.Error("Error expected")
 			}

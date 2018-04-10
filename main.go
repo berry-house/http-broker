@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	"github.com/berry-house/http_broker/controllers"
-	"github.com/berry-house/http_broker/drivers"
+	"github.com/berry-house/http_broker/drivers/database"
 	"github.com/berry-house/http_broker/models"
 	"github.com/berry-house/http_broker/services"
 	"github.com/gorilla/mux"
@@ -19,6 +19,9 @@ import (
 
 var (
 	port             int
+	httpsEnabled     bool
+	httpsCert        string
+	httpsKey         string
 	runningMode      string
 	loggerConfigFile string
 	databaseAddress  string
@@ -29,6 +32,9 @@ var (
 
 func init() {
 	flag.IntVar(&port, "port", 8000, "Port in which the service listens")
+	flag.BoolVar(&httpsEnabled, "httpsEnabled", true, "Run with HTTPS")
+	flag.StringVar(&httpsCert, "httpsCert", "", "HTTPS certificate path")
+	flag.StringVar(&httpsKey, "httpsKey", "", "HTTPS key path")
 	flag.StringVar(&runningMode, "runningMode", "", "Running mode of the server (either \"prod\" or \"test\")")
 	flag.StringVar(&loggerConfigFile, "loggerConfigFile", "", "Path of JSON file for logging configuration.")
 	flag.StringVar(&databaseAddress, "databaseAddress", "", "Address for the database")
@@ -45,7 +51,7 @@ func main() {
 	switch runningMode {
 	case "prod":
 		// Drivers
-		databaseDriver, err := drivers.NewDatabaseMySQL(
+		databaseDriver, err := database.NewMySQL(
 			fmt.Sprintf("%s:%s@tcp(%s)/%s", databaseUsername, databasePassword, databaseAddress, databaseName),
 		)
 		if err != nil {
@@ -62,7 +68,7 @@ func main() {
 		}
 	case "test":
 		// Drivers
-		databaseDriver, _ := drivers.NewDatabaseMemory(
+		databaseDriver, _ := database.NewMemory(
 			map[uint][]*models.StatusData{
 				1: []*models.StatusData{},
 				2: []*models.StatusData{},
@@ -122,5 +128,12 @@ func main() {
 		Addr:    "0.0.0.0:8000",
 	}
 
-	log.Fatal(server.ListenAndServe())
+	if httpsEnabled {
+		if httpsCert == "" || httpsKey == "" {
+			panic("httpsCert and httpsKey must not be empty")
+		}
+		log.Fatal(server.ListenAndServeTLS(httpsCert, httpsKey))
+	} else {
+		log.Fatal(server.ListenAndServe())
+	}
 }

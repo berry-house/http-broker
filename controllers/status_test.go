@@ -27,19 +27,24 @@ type mockStatusService struct{}
 
 var _ services.Status = (*mockStatusService)(nil)
 
-func (s *mockStatusService) Write(temp *models.StatusData) error {
-	if temp == nil {
+func (s *mockStatusService) Write(data *models.StatusData) error {
+	if data == nil {
 		return services.StatusInvalidDataError("nil data")
 	}
-	if temp.Status < -30 || temp.Status > 50 {
-		return services.StatusInvalidStatus
+
+	// Threshold values
+	if data.Temperature < -30 || data.Temperature > 50 ||
+		data.Light > 150 ||
+		data.Humidity > 100 {
+		return services.StatusInvalidData
 	}
+
 	// Mocked valid IDs
-	if temp.ID > 0 && temp.ID < 5 {
+	if data.ID > 0 && data.ID < 5 {
 		return nil
 	}
 	// Mocked driver error
-	if temp.ID == 0 || temp.ID == 5 {
+	if data.ID == 0 || data.ID == 5 {
 		return services.StatusDatabaseDriverError("mocked error")
 	}
 
@@ -64,6 +69,8 @@ func TestWriteStatus(t *testing.T) {
 		},
 	}
 	server := httptest.NewServer(handler)
+	defer server.Close()
+
 	tests := map[string]struct {
 		request            *http.Request // input
 		expectedStatus     string        // expected status
@@ -80,23 +87,33 @@ func TestWriteStatus(t *testing.T) {
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		"Invalid ID": {
-			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":-1,"timestamp":1516472722,"status":20}`)),
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":-1,"timestamp":1516472722}`)),
 			expectedStatus:     "Invalid body.\n",
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		"Non-existing ID": {
-			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":7,"timestamp":1516472722,"status":20}`)),
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":7,"timestamp":1516472722}`)),
 			expectedStatus:     "Invalid ID.\n",
 			expectedStatusCode: http.StatusNotFound,
 		},
-		"Status too high": {
-			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"status":163.4}`)),
-			expectedStatus:     "Invalid status.\n",
+		"Temperature too high": {
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"timestamp":1516472722,"temperature":163}`)),
+			expectedStatus:     "Invalid data.\n",
 			expectedStatusCode: http.StatusBadRequest,
 		},
-		"Status too low": {
-			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"status":-80.4}`)),
-			expectedStatus:     "Invalid status.\n",
+		"Temperature too low": {
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"timestamp":1516472722,"temperature":-80}`)),
+			expectedStatus:     "Invalid data.\n",
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		"Humidity too high": {
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"timestamp":1516472722,"humidity":103}`)),
+			expectedStatus:     "Invalid data.\n",
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		"Light too high": {
+			request:            buildStatusRequest("POST", server.URL, []byte(`{"id":1,"timestamp":1516472722,"light":165}`)),
+			expectedStatus:     "Invalid data.\n",
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		"Database error": {

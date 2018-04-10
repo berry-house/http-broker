@@ -6,10 +6,11 @@ import (
 	"go.uber.org/zap"
 )
 
+// LogError extracts the Logger from the request's context and logs an error.
 func LogError(r *http.Request, err error) {
 	loggerValue := r.Context().Value("logger")
 	if loggerValue == nil {
-		panic("No logger")
+		return
 	}
 
 	logger, ok := loggerValue.(*zap.Logger)
@@ -24,10 +25,11 @@ func LogError(r *http.Request, err error) {
 	)
 }
 
+// LogInfo extracts the Logger from the request's context and logs a message.
 func LogInfo(r *http.Request, msg string) {
 	loggerValue := r.Context().Value("logger")
 	if loggerValue == nil {
-		panic("No logger")
+		return
 	}
 
 	logger, ok := loggerValue.(*zap.Logger)
